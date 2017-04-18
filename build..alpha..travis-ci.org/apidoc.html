@@ -1,0 +1,305 @@
+<div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a
+
+        href="https://github.com/joeattardi/promise-poller"
+
+    >promise-poller (v1.5.2)</a>
+</h1>
+<h4>A basic poller built on top of promises</h4>
+<div class="apidocSectionDiv"><a
+    href="#apidoc.tableOfContents"
+    id="apidoc.tableOfContents"
+><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.promise-poller">module promise-poller</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.promise-poller.default">
+            function <span class="apidocSignatureSpan">promise-poller.</span>default
+            <span class="apidocSignatureSpan">()</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.promise-poller.default">module promise-poller.default</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.promise-poller.default.default">
+            function <span class="apidocSignatureSpan">promise-poller.</span>default
+            <span class="apidocSignatureSpan">()</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.promise-poller" id="apidoc.module.promise-poller">module promise-poller</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.promise-poller.default" id="apidoc.element.promise-poller.default">
+        function <span class="apidocSignatureSpan">promise-poller.</span>default
+        <span class="apidocSignatureSpan">()</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function promisePoller() {
+  var options = arguments.length &#x3c;= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+  if (typeof options.taskFn !== &#x27;function&#x27;) {
+    throw new Error(&#x27;No taskFn function specified in options&#x27;);
+  }
+
+  Object.keys(DEFAULTS).forEach(function (option) {
+    return options[option] = options[option] || DEFAULTS[option];
+  });
+  options.name = options.name || &#x27;Poller-&#x27; + pollerCount++;
+  debug(&#x27;Creating a promise poller &#x22;&#x27; + options.name + &#x27;&#x22; with interval=&#x27; + options.interval + &#x27;, retries=&#x27; + options.retries);
+
+  if (!_strategies2.default[options.strategy]) {
+    throw new Error(&#x27;Invalid strategy &#x22;&#x27; + options.strategy + &#x27;&#x22;. Valid strategies are &#x27; + Object.keys(_strategies2.default));
+  }
+  var strategy = _strategies2.default[options.strategy];
+  debug(&#x27;(&#x27; + options.name + &#x27;) Using strategy &#x22;&#x27; + options.strategy + &#x27;&#x22;.&#x27;);
+  var strategyDefaults = strategy.defaults;
+  Object.keys(strategyDefaults).forEach(function (option) {
+    return options[option] = options[option] || strategyDefaults[option];
+  });
+
+  debug(&#x27;(&#x27; + options.name + &#x27;) Options:&#x27;);
+  Object.keys(options).forEach(function (option) {
+    debug(&#x27;    &#x22;&#x27; + option + &#x27;&#x22;: &#x27; + options[option]);
+  });
+
+  return new _bluebird2.default(function (resolve, reject) {
+    var polling = true;
+    var retriesRemaining = options.retries;
+    var rejections = [];
+    var timeoutId = null;
+
+    if (options.masterTimeout) {
+      debug(&#x27;(&#x27; + options.name + &#x27;) Using master timeout of &#x27; + options.masterTimeout + &#x27; ms.&#x27;);
+      timeoutId = setTimeout(function () {
+        debug(&#x27;(&#x27; + options.name + &#x27;) Master timeout reached. Rejecting master promise.&#x27;);
+        polling = false;
+        reject(&#x27;master timeout&#x27;);
+      }, options.masterTimeout);
+    }
+
+    function poll() {
+      var task = options.taskFn();
+
+      if (task === false) {
+        task = _bluebird2.default.reject(&#x27;Cancelled&#x27;);
+        debug(&#x27;(&#x27; + options.name + &#x27;) Task function returned false, canceling.&#x27;);
+        reject(rejections);
+        polling = false;
+      }
+
+      var taskPromise = _bluebird2.default.resolve(task);
+
+      if (options.timeout) {
+        taskPromise = taskPromise.timeout(options.timeout);
+      }
+
+      taskPromise.then(function (result) {
+        debug(&#x27;(&#x27; + options.name + &#x27;) Poll succeeded. Resolving master promise.&#x27;);
+        if (timeoutId !== null) {
+          clearTimeout(timeoutId);
+        }
+        resolve(result);
+      }, function (err) {
+        rejections.push(err);
+        if (typeof options.progressCallback === &#x27;function&#x27;) {
+          options.progressCallback(retriesRemaining, err);
+        }
+
+        if (! --retriesRemaining) {
+          debug(&#x27;(&#x27; + options.name + &#x27;) Maximum retries reached. Rejecting master promise.&#x27;);
+          reject(rejections);
+        } else if (polling) {
+          debug(&#x27;(&#x27; + options.name + &#x27;) Poll failed. &#x27; + retriesRemaining + &#x27; retries remaining.&#x27;);
+
+          var nextInterval = strategy.getNextInterval(options.retries - retriesRemaining, options);
+
+          debug(&#x27;(&#x27; + options.name + &#x27;) Waiting &#x27; + nextInterval + &#x27;ms to try again.&#x27;);
+          _bluebird2.default.delay(nextInterval).then(poll);
+        }
+      });
+    }
+
+    poll();
+  });
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.promise-poller.default" id="apidoc.module.promise-poller.default">module promise-poller.default</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.promise-poller.default.default" id="apidoc.element.promise-poller.default.default">
+        function <span class="apidocSignatureSpan">promise-poller.</span>default
+        <span class="apidocSignatureSpan">()</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function promisePoller() {
+  var options = arguments.length &#x3c;= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+  if (typeof options.taskFn !== &#x27;function&#x27;) {
+    throw new Error(&#x27;No taskFn function specified in options&#x27;);
+  }
+
+  Object.keys(DEFAULTS).forEach(function (option) {
+    return options[option] = options[option] || DEFAULTS[option];
+  });
+  options.name = options.name || &#x27;Poller-&#x27; + pollerCount++;
+  debug(&#x27;Creating a promise poller &#x22;&#x27; + options.name + &#x27;&#x22; with interval=&#x27; + options.interval + &#x27;, retries=&#x27; + options.retries);
+
+  if (!_strategies2.default[options.strategy]) {
+    throw new Error(&#x27;Invalid strategy &#x22;&#x27; + options.strategy + &#x27;&#x22;. Valid strategies are &#x27; + Object.keys(_strategies2.default));
+  }
+  var strategy = _strategies2.default[options.strategy];
+  debug(&#x27;(&#x27; + options.name + &#x27;) Using strategy &#x22;&#x27; + options.strategy + &#x27;&#x22;.&#x27;);
+  var strategyDefaults = strategy.defaults;
+  Object.keys(strategyDefaults).forEach(function (option) {
+    return options[option] = options[option] || strategyDefaults[option];
+  });
+
+  debug(&#x27;(&#x27; + options.name + &#x27;) Options:&#x27;);
+  Object.keys(options).forEach(function (option) {
+    debug(&#x27;    &#x22;&#x27; + option + &#x27;&#x22;: &#x27; + options[option]);
+  });
+
+  return new _bluebird2.default(function (resolve, reject) {
+    var polling = true;
+    var retriesRemaining = options.retries;
+    var rejections = [];
+    var timeoutId = null;
+
+    if (options.masterTimeout) {
+      debug(&#x27;(&#x27; + options.name + &#x27;) Using master timeout of &#x27; + options.masterTimeout + &#x27; ms.&#x27;);
+      timeoutId = setTimeout(function () {
+        debug(&#x27;(&#x27; + options.name + &#x27;) Master timeout reached. Rejecting master promise.&#x27;);
+        polling = false;
+        reject(&#x27;master timeout&#x27;);
+      }, options.masterTimeout);
+    }
+
+    function poll() {
+      var task = options.taskFn();
+
+      if (task === false) {
+        task = _bluebird2.default.reject(&#x27;Cancelled&#x27;);
+        debug(&#x27;(&#x27; + options.name + &#x27;) Task function returned false, canceling.&#x27;);
+        reject(rejections);
+        polling = false;
+      }
+
+      var taskPromise = _bluebird2.default.resolve(task);
+
+      if (options.timeout) {
+        taskPromise = taskPromise.timeout(options.timeout);
+      }
+
+      taskPromise.then(function (result) {
+        debug(&#x27;(&#x27; + options.name + &#x27;) Poll succeeded. Resolving master promise.&#x27;);
+        if (timeoutId !== null) {
+          clearTimeout(timeoutId);
+        }
+        resolve(result);
+      }, function (err) {
+        rejections.push(err);
+        if (typeof options.progressCallback === &#x27;function&#x27;) {
+          options.progressCallback(retriesRemaining, err);
+        }
+
+        if (! --retriesRemaining) {
+          debug(&#x27;(&#x27; + options.name + &#x27;) Maximum retries reached. Rejecting master promise.&#x27;);
+          reject(rejections);
+        } else if (polling) {
+          debug(&#x27;(&#x27; + options.name + &#x27;) Poll failed. &#x27; + retriesRemaining + &#x27; retries remaining.&#x27;);
+
+          var nextInterval = strategy.getNextInterval(options.retries - retriesRemaining, options);
+
+          debug(&#x27;(&#x27; + options.name + &#x27;) Waiting &#x27; + nextInterval + &#x27;ms to try again.&#x27;);
+          _bluebird2.default.delay(nextInterval).then(poll);
+        }
+      });
+    }
+
+    poll();
+  });
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
