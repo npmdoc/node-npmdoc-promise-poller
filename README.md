@@ -1,6 +1,7 @@
 # npmdoc-promise-poller
 
-api documentation for  [promise-poller (v1.5.2)](https://github.com/joeattardi/promise-poller)  [![npm package](https://img.shields.io/npm/v/npmdoc-promise-poller.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-promise-poller) [![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-promise-poller.svg)](https://travis-ci.org/npmdoc/node-npmdoc-promise-poller)
+#### basic api documentation for  [promise-poller (v1.5.2)](https://github.com/joeattardi/promise-poller)  [![npm package](https://img.shields.io/npm/v/npmdoc-promise-poller.svg?style=flat-square)](https://www.npmjs.org/package/npmdoc-promise-poller) [![travis-ci.org build-status](https://api.travis-ci.org/npmdoc/node-npmdoc-promise-poller.svg)](https://travis-ci.org/npmdoc/node-npmdoc-promise-poller)
+
 #### A basic poller built on top of promises
 
 [![NPM](https://nodei.co/npm/promise-poller.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/promise-poller)
@@ -77,7 +78,8 @@ api documentation for  [promise-poller (v1.5.2)](https://github.com/joeattardi/p
         "prepublish": "npm run build",
         "test": "npm run compile && jasmine JASMINE_CONFIG_PATH=jasmine.json"
     },
-    "version": "1.5.2"
+    "version": "1.5.2",
+    "bin": {}
 }
 ```
 
