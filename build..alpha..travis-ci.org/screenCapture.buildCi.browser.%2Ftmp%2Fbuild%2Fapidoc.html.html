@@ -65,19 +65,6 @@
 
     </ol></li>
 
-    <li class="apidocModuleLi"><a href="#apidoc.module.promise-poller.default">module promise-poller.default</a><ol>
-
-        <li>
-
-            <a class="apidocElementLiA" href="#apidoc.element.promise-poller.default.default">
-            function <span class="apidocSignatureSpan">promise-poller.</span>default
-            <span class="apidocSignatureSpan">()</span>
-            </a>
-
-        </li>
-
-    </ol></li>
-
 </ol></div>
 
 <div class="apidocSectionDiv">
@@ -179,112 +166,23 @@
     poll();
   });
 }</pre></li>
-    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
-    </ul>
-
-
-</div>
-
-<div class="apidocSectionDiv">
-<h1><a href="#apidoc.module.promise-poller.default" id="apidoc.module.promise-poller.default">module promise-poller.default</a></h1>
-
-
-    <h2>
-        <a href="#apidoc.element.promise-poller.default.default" id="apidoc.element.promise-poller.default.default">
-        function <span class="apidocSignatureSpan">promise-poller.</span>default
-        <span class="apidocSignatureSpan">()</span>
-        </a>
-    </h2>
-    <ul>
-    <li>description and source-code<pre class="apidocCodePre">function promisePoller() {
-  var options = arguments.length &lt;= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-  if (typeof options.taskFn !== 'function') {
-    throw new Error('No taskFn function specified in options');
-  }
-
-  Object.keys(DEFAULTS).forEach(function (option) {
-    return options[option] = options[option] || DEFAULTS[option];
-  });
-  options.name = options.name || 'Poller-' + pollerCount++;
-  debug('Creating a promise poller "' + options.name + '" with interval=' + options.interval + ', retries=' + options.retries);
-
-  if (!_strategies2.default[options.strategy]) {
-    throw new Error('Invalid strategy "' + options.strategy + '". Valid strategies are ' + Object.keys(_strategies2.default));
-  }
-  var strategy = _strategies2.default[options.strategy];
-  debug('(' + options.name + ') Using strategy "' + options.strategy + '".');
-  var strategyDefaults = strategy.defaults;
-  Object.keys(strategyDefaults).forEach(function (option) {
-    return options[option] = options[option] || strategyDefaults[option];
+    <li>example usage<pre class="apidocCodePre">...
   });
 
   debug('(' + options.name + ') Options:');
   Object.keys(options).forEach(function (option) {
-    debug('    "' + option + '": ' + options[option]);
+debug('    "' + option + '": ' + options[option]);
   });
 
-  return new _bluebird2.default(function (resolve, reject) {
-    var polling = true;
-    var retriesRemaining = options.retries;
-    var rejections = [];
-    var timeoutId = null;
+  return new _bluebird2.<span class="apidocCodeKeywordSpan">default</span>(function (resolve, reject) {
+var polling = true;
+var retriesRemaining = options.retries;
+var rejections = [];
+var timeoutId = null;
 
-    if (options.masterTimeout) {
-      debug('(' + options.name + ') Using master timeout of ' + options.masterTimeout + ' ms.');
-      timeoutId = setTimeout(function () {
-        debug('(' + options.name + ') Master timeout reached. Rejecting master promise.');
-        polling = false;
-        reject('master timeout');
-      }, options.masterTimeout);
-    }
-
-    function poll() {
-      var task = options.taskFn();
-
-      if (task === false) {
-        task = _bluebird2.default.reject('Cancelled');
-        debug('(' + options.name + ') Task function returned false, canceling.');
-        reject(rejections);
-        polling = false;
-      }
-
-      var taskPromise = _bluebird2.default.resolve(task);
-
-      if (options.timeout) {
-        taskPromise = taskPromise.timeout(options.timeout);
-      }
-
-      taskPromise.then(function (result) {
-        debug('(' + options.name + ') Poll succeeded. Resolving master promise.');
-        if (timeoutId !== null) {
-          clearTimeout(timeoutId);
-        }
-        resolve(result);
-      }, function (err) {
-        rejections.push(err);
-        if (typeof options.progressCallback === 'function') {
-          options.progressCallback(retriesRemaining, err);
-        }
-
-        if (! --retriesRemaining) {
-          debug('(' + options.name + ') Maximum retries reached. Rejecting master promise.');
-          reject(rejections);
-        } else if (polling) {
-          debug('(' + options.name + ') Poll failed. ' + retriesRemaining + ' retries remaining.');
-
-          var nextInterval = strategy.getNextInterval(options.retries - retriesRemaining, options);
-
-          debug('(' + options.name + ') Waiting ' + nextInterval + 'ms to try again.');
-          _bluebird2.default.delay(nextInterval).then(poll);
-        }
-      });
-    }
-
-    poll();
-  });
-}</pre></li>
-    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+if (options.masterTimeout) {
+  debug('(' + options.name + ') Using master timeout of ' + options.masterTimeout + ' ms.');
+...</pre></li>
     </ul>
 
 
